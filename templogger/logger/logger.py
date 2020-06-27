@@ -3,10 +3,10 @@
 import os
 import sqlite3
 from time import sleep
-from threading import Thread, Timer, Lock, Event
+from threading import Thread, Lock, Event
 from datetime import datetime
 
-from mitemp_bt.mitemp_bt_poller import MiTempBtPoller, MI_TEMPERATURE, MI_HUMIDITY, MI_BATTERY
+from mitemp_bt.mitemp_bt_poller import MiTempBtPoller, MI_TEMPERATURE, MI_HUMIDITY
 from btlewrap.bluepy import BluepyBackend
 
 
@@ -29,8 +29,7 @@ class HTDataBaseHandler:
         
         if not self.db_exists:
             self._init_database()
-        
-            
+
     def close(self):
         if self.db_connection:
             self.db_connection.close()
@@ -88,7 +87,8 @@ class HTDevicePoller:
         no_of_devices = len(self._device_config)
         for device, device_config in self._device_config.items():
             poller = MiTempBtPoller(device_config['mac'], BluepyBackend)
-            t = Thread(target=self.poll_device_thread, args=(self.poll_interval, self._cancel_event, device, poller, self.__bluetooth_access_lock, self.database_handler))
+            t = Thread(target=self.poll_device_thread, args=(self.poll_interval, self._cancel_event, device, poller,
+                                                             self.__bluetooth_access_lock, self.database_handler))
             t.start()
             self.__threads[device] = t
             sleep(self.poll_interval/no_of_devices)
@@ -115,7 +115,11 @@ class HTDevicePoller:
             db_handler.write_row(device, sample_time, temp, humid, battery)
 
 
-if __name__ == '__main__':
+def db_test():
     db_handler = HTDataBaseHandler()
     db_handler.clean_database()
     db_handler.write_row('HT_TEST', datetime.now(), 25.4, 51.0, 99)
+
+
+if __name__ == '__main__':
+    db_test()

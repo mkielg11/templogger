@@ -3,5 +3,3 @@ bluepy
 btlewrap
 matplotlib
 plotly
-sqlite3
-

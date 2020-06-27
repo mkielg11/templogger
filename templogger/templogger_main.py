@@ -22,7 +22,7 @@ def device_config_parser(path='devices.config'):
     return config
 
 
-if __name__ == '__main__':
+def main():
     print('Running script...')
     config = device_config_parser()
     print('Got config:', config)
@@ -38,3 +38,7 @@ if __name__ == '__main__':
         sleep(config['General']['device_sample_interval_s'] + 5)
         db_handler.close()
     print('Script finished')
+
+
+if __name__ == '__main__':
+    main()
