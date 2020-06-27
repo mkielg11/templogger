@@ -1,3 +1,7 @@
 numpy
-bluepi
+bluepy
 btlewrap
+matplotlib
+plotly
+sqlite3
+
