@@ -4,8 +4,9 @@ from time import sleep
 from threading import Thread, Lock, Event
 from datetime import datetime
 
-from mitemp_bt.mitemp_bt_poller import MiTempBtPoller, MI_TEMPERATURE, MI_HUMIDITY
+import btlewrap
 from btlewrap.bluepy import BluepyBackend
+from mitemp_bt.mitemp_bt_poller import MiTempBtPoller, MI_TEMPERATURE, MI_HUMIDITY
 
 
 class HTDevicePoller:
@@ -35,7 +36,11 @@ class HTDevicePoller:
         ticker = Event()
         while not ticker.wait(interval) and not cancel_event.is_set():
             with lock:
-                mitemp_poller.fill_cache()
+                try:
+                    mitemp_poller.fill_cache()
+                except btlewrap.base.BluetoothBackendException:
+                    print('Got error getting reading from', device)
+                    continue
                 sample_time = datetime.now()
                 battery = mitemp_poller.battery_level()
                 

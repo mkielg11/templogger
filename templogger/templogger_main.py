@@ -40,7 +40,7 @@ def main():
     visualiser = HTDataVisualiser(config['General']['plot_refresh_interval_s'], config['devices'], db_handler)
     try:
         poller.start_pollers()
-        visualiser.start(debug=False)
+        visualiser.start(host_ip='192.168.100.180', port=8080, debug=True)
         while True:
             sleep(2)
     except KeyboardInterrupt:

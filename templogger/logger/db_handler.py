@@ -5,7 +5,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from templogger.logger import DATETIME_FORMAT
+DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
 
 class HTDataBaseHandler:

@@ -20,7 +20,7 @@ class HTDataVisualiser:
         self._device_config = device_config
         self._cancel_event = Event()
 
-    def start(self, debug=False):
+    def start(self, host_ip=None, port=8080, debug=False):
         self._app.layout = html.Div(
             html.Div([
                 # html.H4('Temperature over time'),
@@ -39,9 +39,10 @@ class HTDataVisualiser:
             return self.visualise(n)
 
         # self.visualise(self.plot_interval, self._device_config, self.database_handler)
-        hostname = socket.gethostname()
-        ip_address = socket.gethostbyname(hostname)
-        self._app.run_server(debug=debug, port=8080, host=ip_address)
+        if host_ip is None:
+            hostname = socket.gethostname()
+            host_ip = socket.gethostbyname(hostname)
+        self._app.run_server(debug=debug, port=port, host=host_ip)
 
     def visualise(self, n):
         data = self.database_handler.get_data()
