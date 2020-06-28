@@ -20,11 +20,13 @@ def device_config_parser(path=None):
     config['General']['devices'] = config['General']['devices'].split(',')
     config['General']['plot_refresh_interval_s'] = int(config['General']['plot_refresh_interval_s'])
     config['General']['device_sample_interval_s'] = int(config['General']['device_sample_interval_s'])
+    config['General']['default_days_view'] = int(config['General']['default_days_view'])
 
     config['devices'] = dict()
     for dev in config['General']['devices']:
         config['devices'][dev] = config_obj._sections[dev]
         config['devices'][dev]['temp_offset'] = float(config['devices'][dev]['temp_offset'])
+        config['devices'][dev]['humid_offset'] = float(config['devices'][dev]['humid_offset'])
     return config
 
 

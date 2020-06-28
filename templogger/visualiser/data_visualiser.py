@@ -60,7 +60,8 @@ class HTDataVisualiser:
             device_data = device_data.set_index(pd.DatetimeIndex(device_data['date']))
             device_mean_temp_per_min = (device_data.groupby(pd.Grouper(freq='min')).temperature.mean()
                                         - device_setting['temp_offset'])
-            device_mean_humid_per_min = device_data.groupby(pd.Grouper(freq='min')).humidity.mean()
+            device_mean_humid_per_min = (device_data.groupby(pd.Grouper(freq='min')).humidity.mean()
+                                         - device_setting['humid_offset'])
 
             dev_temp_plot = go.Scatter(
                 x=device_mean_temp_per_min.index,
