@@ -6,6 +6,8 @@ from time import sleep
 from threading import Thread, Lock, Event
 from datetime import datetime
 
+import pandas as pd
+
 from mitemp_bt.mitemp_bt_poller import MiTempBtPoller, MI_TEMPERATURE, MI_HUMIDITY
 from btlewrap.bluepy import BluepyBackend
 
@@ -17,11 +19,13 @@ class HTDataBaseHandler:
     TABLE_NAME = 'HT_DATA'
     TABLE_COLUMNS = (('device', 'text'),
                      ('date', 'text'),
-                     ('temerature decigrades', 'integer'),
+                     ('temperature decigrades', 'integer'),
                      ('humidity promille', 'integer'),
                      ('battery status', 'integer'))
     
-    def __init__(self, path='ht_data.db'):
+    def __init__(self, path=None):
+        if path is None:
+            path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'ht_data.db')
         self._db_access_lock = Lock()
         with self._db_access_lock:
             self.db_exists = os.path.exists(path)
@@ -60,7 +64,18 @@ class HTDataBaseHandler:
                               int(round(temperature*10)), int(round(humidity*10)), battery_status))
             
             self.db_connection.commit()
-            
+
+    def get_data(self):
+        with self._db_access_lock:
+            df = pd.read_sql_query("SELECT * from "+self.TABLE_NAME, self.db_connection)
+        df['date'] = pd.to_datetime(df['date'], format=DATETIME_FORMAT)
+        if 'temerature' in df.columns:
+            # Handle typo
+            df = df.rename(columns={'temerature': 'temperature', }, errors="raise")
+        df['temperature'] = df['temperature'].astype(float) / 10
+        df['humidity'] = df['humidity'].astype(float) / 10
+        return df
+
     def clean_database(self):
         with self._db_access_lock:
             # Get a cursor object
@@ -72,7 +87,7 @@ class HTDataBaseHandler:
 
         self.db_exists = False
         self._init_database()
-          
+
 
 class HTDevicePoller:
     def __init__(self, poll_interval, device_config, database_handler):

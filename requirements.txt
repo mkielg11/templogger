@@ -1,4 +1,5 @@
 numpy
+pandas
 bluepy
 btlewrap
 matplotlib
