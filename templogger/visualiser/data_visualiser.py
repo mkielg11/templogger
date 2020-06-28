@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import socket
-from threading import Thread, Event
+from datetime import datetime, timedelta
+from threading import Event
 
 import pandas as pd
 import plotly.graph_objs as go
@@ -14,8 +15,9 @@ from dash.dependencies import Input, Output
 class HTDataVisualiser:
     _app = dash.Dash('HTDataVisualiser')
 
-    def __init__(self, plot_interval, device_config, database_handler):
+    def __init__(self, plot_interval, device_config, database_handler, default_hours_view=48):
         self.plot_interval = plot_interval
+        self.default_hours_view = default_hours_view
         self.database_handler = database_handler
         self._device_config = device_config
         self._cancel_event = Event()
@@ -46,13 +48,12 @@ class HTDataVisualiser:
 
     def visualise(self, n):
         data = self.database_handler.get_data()
-
         fig = make_subplots(specs=[[{"secondary_y": True}]])
         fig.update_layout(
-            title='Temperature over time',
-            xaxis_title='Date',
-            # xaxis={range: [start, end]},
+            title='Temperature and humidity over time',
+            xaxis_title='Date and time',
         )
+
         fig.update_yaxes(title_text='Temperature (Celsius)', secondary_y=False)
         fig.update_yaxes(title_text='Humidity [dashed] (%)', secondary_y=True)
         for device, device_setting in self._device_config.items():
@@ -85,7 +86,9 @@ class HTDataVisualiser:
             )
             fig.add_trace(dev_temp_plot, secondary_y=False)
             fig.add_trace(dev_humid_plot, secondary_y=True)
-        # fig.show()
+        default_xaxis_min = datetime.now() - timedelta(hours=self.default_hours_view)
+        if data.date.min() < default_xaxis_min:
+            fig.update_layout(xaxis={range: [default_xaxis_min, datetime.now()]})
         return fig
 
 
