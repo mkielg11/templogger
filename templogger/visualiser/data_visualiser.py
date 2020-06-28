@@ -26,7 +26,10 @@ class HTDataVisualiser:
         self._app.layout = html.Div(
             html.Div([
                 # html.H4('Temperature over time'),
-                dcc.Graph(id='live-update-graph'),
+                dcc.Graph(
+                    id='live-update-graph',
+                    animate=True,
+                ),
                 dcc.Interval(
                     id='interval-component',
                     interval=self.plot_interval * 1000,  # in milliseconds
