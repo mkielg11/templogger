@@ -1,3 +1,3 @@
 #!/usr/bin/env python3
 
-from .visualiser import HTDataVisualiser
+from .data_visualiser import HTDataVisualiser
