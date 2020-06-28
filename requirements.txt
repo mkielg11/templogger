@@ -5,3 +5,4 @@ btlewrap
 matplotlib
 plotly
 dash
+dash_daq

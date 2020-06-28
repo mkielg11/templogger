@@ -9,36 +9,52 @@ from plotly.subplots import make_subplots
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_daq as daq
 from dash.dependencies import Input, Output
 
 
 class HTDataVisualiser:
     _app = dash.Dash('HTDataVisualiser')
 
-    def __init__(self, plot_interval, device_config, database_handler, default_hours_view=48):
+    def __init__(self, plot_interval, device_config, database_handler, default_hours_view=48,
+                 show_current_temp_for_device=None):
         self.plot_interval = plot_interval
         self.default_hours_view = default_hours_view
+        self.show_current_temp_for_device = show_current_temp_for_device
         self.database_handler = database_handler
         self._device_config = device_config
         self._cancel_event = Event()
 
     def start(self, host_ip=None, port=8080, debug=False):
+        div_list = [
+            # html.H4('Temperature over time'),
+            dcc.Graph(
+                id='live-update-graph',
+                animate=True,
+            ),
+            dcc.Interval(
+                id='interval-component',
+                interval=self.plot_interval * 1000,  # in milliseconds
+                n_intervals=0
+            ),
+        ]
+        if self.show_current_temp_for_device is not None:
+            assert self.show_current_temp_for_device in self._device_config
+            div_list.append(daq.Thermometer(
+                id='my-thermometer',
+                value=20,
+                min=-5,
+                max=35,
+                style={
+                    'margin-bottom': '5%'
+                }
+            ))
         self._app.layout = html.Div(
-            html.Div([
-                # html.H4('Temperature over time'),
-                dcc.Graph(
-                    id='live-update-graph',
-                    animate=True,
-                ),
-                dcc.Interval(
-                    id='interval-component',
-                    interval=self.plot_interval * 1000,  # in milliseconds
-                    n_intervals=0
-                )
-            ])
+            html.Div(div_list)
         )
 
-        @self._app.callback(Output('live-update-graph', 'figure'),
+        @self._app.callback([Output('live-update-graph', 'figure'),
+                             Output('my-thermometer', 'value')],
                             [Input('interval-component', 'n_intervals')])
         def update_visualise(n):
             return self.visualise(n)
@@ -59,6 +75,7 @@ class HTDataVisualiser:
 
         fig.update_yaxes(title_text='Temperature (Celsius)', secondary_y=False)
         fig.update_yaxes(title_text='Humidity [dashed] (%)', secondary_y=True)
+        current_temp = None
         for device, device_setting in self._device_config.items():
             device_data = data[data.device == device]
             device_data = device_data.set_index(pd.DatetimeIndex(device_data['date']))
@@ -89,10 +106,12 @@ class HTDataVisualiser:
             )
             fig.add_trace(dev_temp_plot, secondary_y=False)
             fig.add_trace(dev_humid_plot, secondary_y=True)
+            if device == self.show_current_temp_for_device:
+                current_temp = device_data.iloc[-1].temperature
         default_xaxis_min = datetime.now() - timedelta(hours=self.default_hours_view)
         if data.date.min() < default_xaxis_min:
             fig.update_layout(xaxis={range: [default_xaxis_min, datetime.now()]})
-        return fig
+        return fig, current_temp
 
 
 if __name__ == '__main__':
