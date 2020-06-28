@@ -1,26 +1,50 @@
 #!/usr/bin/env python3
-
+import socket
 from threading import Thread, Event
 
 import pandas as pd
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+from dash.dependencies import Input, Output
 
 
 class HTDataVisualiser:
+    _app = dash.Dash('HTDataVisualiser')
+
     def __init__(self, plot_interval, device_config, database_handler):
         self.plot_interval = plot_interval
         self.database_handler = database_handler
         self._device_config = device_config
-        self._thread = None
         self._cancel_event = Event()
 
-    def start(self):
-        self.visualise(self.plot_interval, self._device_config, self.database_handler)
+    def start(self, debug=False):
+        self._app.layout = html.Div(
+            html.Div([
+                # html.H4('Temperature over time'),
+                dcc.Graph(id='live-update-graph'),
+                dcc.Interval(
+                    id='interval-component',
+                    interval=self.plot_interval * 1000,  # in milliseconds
+                    n_intervals=0
+                )
+            ])
+        )
 
-    @staticmethod
-    def visualise(plot_interval, device_config, database_handler):
-        data = database_handler.get_data()
+        @self._app.callback(Output('live-update-graph', 'figure'),
+                            [Input('interval-component', 'n_intervals')])
+        def update_visualise(n):
+            return self.visualise(n)
+
+        # self.visualise(self.plot_interval, self._device_config, self.database_handler)
+        hostname = socket.gethostname()
+        ip_address = socket.gethostbyname(hostname)
+        self._app.run_server(debug=debug, port=8080, host=ip_address)
+
+    def visualise(self, n):
+        data = self.database_handler.get_data()
 
         fig = make_subplots(specs=[[{"secondary_y": True}]])
         fig.update_layout(
@@ -30,7 +54,7 @@ class HTDataVisualiser:
         )
         fig.update_yaxes(title_text='Temperature (Celsius)', secondary_y=False)
         fig.update_yaxes(title_text='Humidity [dashed] (%)', secondary_y=True)
-        for device, device_setting in device_config.items():
+        for device, device_setting in self._device_config.items():
             device_data = data[data.device == device]
             device_data = device_data.set_index(pd.DatetimeIndex(device_data['date']))
             device_mean_temp_per_min = (device_data.groupby(pd.Grouper(freq='min')).temperature.mean()
@@ -59,7 +83,8 @@ class HTDataVisualiser:
             )
             fig.add_trace(dev_temp_plot, secondary_y=False)
             fig.add_trace(dev_humid_plot, secondary_y=True)
-        fig.show()
+        # fig.show()
+        return fig
 
 
 if __name__ == '__main__':

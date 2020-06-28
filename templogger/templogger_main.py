@@ -5,6 +5,7 @@ import configparser
 from time import sleep
 
 from templogger.logger import HTDevicePoller, HTDataBaseHandler
+from templogger.visualiser import HTDataVisualiser
 
 
 def device_config_parser(path=None):
@@ -30,14 +31,21 @@ def device_config_parser(path=None):
 def main():
     print('Running script...')
     config = device_config_parser()
-    print('Got config:', config)
+    # print('Got config:', config)
+    # Data base handler
     db_handler = HTDataBaseHandler()
+    # Data poller
     poller = HTDevicePoller(config['General']['device_sample_interval_s'], config['devices'], db_handler)
-    poller.start_pollers()
+    # Data visualiser
+    visualiser = HTDataVisualiser(config['General']['plot_refresh_interval_s'], config['devices'], db_handler)
     try:
+        poller.start_pollers()
+        visualiser.start(debug=False)
         while True:
             sleep(2)
     except KeyboardInterrupt:
+        print('Got keyboard interrupt!')
+    finally:
         print('Stopping script..')
         poller.stop_pollers()
         sleep(config['General']['device_sample_interval_s'] + 5)

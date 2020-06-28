@@ -4,3 +4,4 @@ bluepy
 btlewrap
 matplotlib
 plotly
+dash
