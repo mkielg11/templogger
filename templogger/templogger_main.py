@@ -21,7 +21,7 @@ def device_config_parser(path=None):
     config['General']['plot_refresh_interval_s'] = int(config['General']['plot_refresh_interval_s'])
     config['General']['device_sample_interval_s'] = int(config['General']['device_sample_interval_s'])
     config['General']['default_hours_view'] = int(config['General']['default_hours_view'])
-    config['General']['show_current_temp_for_device'] = int(config['General']['show_current_temp_for_device'])
+    config['General']['show_current_temp_for_device'] = config['General']['show_current_temp_for_device']
 
     config['devices'] = dict()
     for dev in config['General']['devices']:
@@ -40,7 +40,8 @@ def main():
     # Data poller
     poller = HTDevicePoller(config['General']['device_sample_interval_s'], config['devices'], db_handler)
     # Data visualiser
-    visualiser = HTDataVisualiser(config['General']['plot_refresh_interval_s'], config['devices'], db_handler)
+    visualiser = HTDataVisualiser(config['General']['plot_refresh_interval_s'], config['devices'], db_handler,
+                                  config['General']['default_hours_view'], config['General']['show_current_temp_for_device'])
     try:
         poller.start_pollers()
         visualiser.start(host_ip='192.168.100.180', port=8080, debug=True)

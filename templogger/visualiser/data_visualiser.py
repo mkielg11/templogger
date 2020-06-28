@@ -37,18 +37,20 @@ class HTDataVisualiser:
                 interval=self.plot_interval * 1000,  # in milliseconds
                 n_intervals=0
             ),
-        ]
-        if self.show_current_temp_for_device is not None:
-            assert self.show_current_temp_for_device in self._device_config
-            div_list.append(daq.Thermometer(
+            daq.Thermometer(
                 id='my-thermometer',
                 value=20,
-                min=-5,
+                min=0,
                 max=35,
                 style={
                     'margin-bottom': '5%'
-                }
-            ))
+                },
+                showCurrentValue=True,
+                units="C",
+                label='Current temperature, {}'.format(self._device_config[self.show_current_temp_for_device]['location'].capitalize()),
+                labelPosition='top'
+            )
+        ]
         self._app.layout = html.Div(
             html.Div(div_list)
         )
@@ -97,7 +99,7 @@ class HTDataVisualiser:
                 x=device_mean_humid_per_min.index,
                 y=device_mean_humid_per_min.values,
                 mode='lines',
-                name=device_setting['location'],
+                name=device_setting['location'].capitalize(),
                 line={
                     'color': device_setting['identifier'],
                     'dash': 'dash'
