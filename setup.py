@@ -9,5 +9,5 @@ setup(
     author_email='m.roenholt@gmail.com',
     description='Logger and plotter of temperature over time',
     packages=find_packages(),
-    script=['templogger/templogger_main', ],
+    scripts=['templogger/templogger_main.py', ],
 )

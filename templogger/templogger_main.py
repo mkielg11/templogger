@@ -16,7 +16,12 @@ _sh.setFormatter(_formatter)
 _logger.addHandler(_sh)
 
 
-def main(host_ip='192.168.100.180', port=8080):
+def main(host_ip='192.168.100.180', port=8080, write_log_to_file=True):
+    if write_log_to_file:
+        fh = logging.FileHandler('templogger.log')
+        fh.setLevel(level=logging.DEBUG)
+        fh.setFormatter(_formatter)
+        _logger.addHandler(fh)
     _logger.info('Running script...')
     config = device_config_parser()
     # Data base handler
@@ -46,8 +51,4 @@ def main(host_ip='192.168.100.180', port=8080):
 
 
 if __name__ == '__main__':
-    _fh = logging.FileHandler('templogger.log')
-    _fh.setLevel(level=logging.DEBUG)
-    _fh.setFormatter(_formatter)
-    _logger.addHandler(_fh)
     main()
