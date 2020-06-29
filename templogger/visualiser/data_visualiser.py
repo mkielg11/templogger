@@ -111,8 +111,8 @@ class HTDataVisualiser:
             if device == self.show_current_temp_for_device:
                 current_temp = device_data.iloc[-1].temperature
         default_xaxis_min = datetime.now() - timedelta(hours=self.default_hours_view)
-        if data.date.min() < default_xaxis_min:
-            fig.update_layout(xaxis={range: [default_xaxis_min, datetime.now()]})
+        if not n and (data.date.min() < default_xaxis_min):
+            fig.update_layout(xaxis={'range': [default_xaxis_min, datetime.now()]})
         return fig, current_temp
 
 
