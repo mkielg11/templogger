@@ -47,7 +47,7 @@ def main(host_ip='192.168.100.180', port=8080):
 
 
 if __name__ == '__main__':
-    _fh = logging.FileHandler('SPOT.log')
+    _fh = logging.FileHandler('templogger.log')
     _fh.setLevel(level=logging.DEBUG)
     _fh.setFormatter(_formatter)
     _logger.addHandler(_fh)
