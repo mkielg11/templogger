@@ -8,7 +8,7 @@ from templogger.utils.device_config_parser import device_config_parser
 from templogger.visualiser import HTDataVisualiser
 
 _logger = logging.getLogger('templogger')
-_logger.setLevel(level=logging.INFO)
+_logger.setLevel(level=logging.DEBUG)
 _formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 _sh = logging.StreamHandler()
 _sh.setLevel(level=logging.INFO)

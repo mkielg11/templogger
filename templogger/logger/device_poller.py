@@ -42,8 +42,9 @@ class HTDevicePoller:
             with lock:
                 try:
                     mitemp_poller.fill_cache()
-                except btlewrap.base.BluetoothBackendException:
-                    _logger.warning('Got error getting reading from', device)
+                except btlewrap.base.BluetoothBackendException as error:
+                    _logger.warning('Got error getting reading from {}'.format(device))
+                    _logger.debug('Error message: {}'.format(error))
                     continue
                 sample_time = datetime.now()
                 battery = mitemp_poller.battery_level()
