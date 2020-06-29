@@ -17,7 +17,6 @@ def device_config_parser(path=None):
     config['General']['plot_refresh_interval_s'] = int(config['General']['plot_refresh_interval_s'])
     config['General']['device_sample_interval_s'] = int(config['General']['device_sample_interval_s'])
     config['General']['default_hours_view'] = int(config['General']['default_hours_view'])
-    config['General']['show_current_temp_for_device'] = config['General']['show_current_temp_for_device']
 
     config['devices'] = dict()
     for dev in config['General']['devices']:

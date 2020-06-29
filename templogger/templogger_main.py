@@ -29,11 +29,10 @@ def main(host_ip='192.168.100.180', port=8080):
     visualiser = HTDataVisualiser(config['General']['plot_refresh_interval_s'],
                                   config['devices'],
                                   db_handler,
-                                  config['General']['default_hours_view'],
-                                  config['General']['show_current_temp_for_device'])
+                                  config['General']['default_hours_view'])
     try:
         poller.start_pollers()
-        visualiser.start(host_ip=host_ip, port=port, debug=True)
+        visualiser.start(host_ip=host_ip, port=port)
         while True:
             sleep(2)
     except KeyboardInterrupt:

@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='TempLogger',
-    version='1.2.0',
+    version='1.3.0',
     url='https://github.com/mkielg11/templogger',
     author='Mathias Rønholt Kielgast',
     author_email='m.roenholt@gmail.com',

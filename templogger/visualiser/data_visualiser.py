@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+
 import socket
 from datetime import datetime, timedelta
 from threading import Event
+from collections import OrderedDict
 
 import pandas as pd
 import plotly.graph_objs as go
@@ -14,20 +16,20 @@ from dash.dependencies import Input, Output
 
 
 class HTDataVisualiser:
-    _app = dash.Dash('HTDataVisualiser')
+    _app = dash.Dash(__name__, external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css', ])
 
-    def __init__(self, plot_interval, device_config, database_handler, default_hours_view=48,
-                 show_current_temp_for_device=None):
+    def __init__(self, plot_interval, device_config, database_handler, default_hours_view=48):
         self.plot_interval = plot_interval
         self.default_hours_view = default_hours_view
-        self.show_current_temp_for_device = show_current_temp_for_device
         self.database_handler = database_handler
-        self._device_config = device_config
+        self._fig = make_subplots(specs=[[{"secondary_y": True}]])
+        self._device_config = OrderedDict(device_config)
         self._cancel_event = Event()
 
     def start(self, host_ip=None, port=8080, debug=False):
+        thermometer_obj_list = list()
         div_list = [
-            # html.H4('Temperature over time'),
+            html.H1('TempLogger Dash'),
             dcc.Graph(
                 id='live-update-graph',
                 animate=True,
@@ -37,32 +39,38 @@ class HTDataVisualiser:
                 interval=self.plot_interval * 1000,  # in milliseconds
                 n_intervals=0
             ),
-            daq.Thermometer(
-                id='my-thermometer',
+        ]
+        callback_output_list = [Output('live-update-graph', 'figure'), ]
+        for device in self._device_config:
+            th_id = '{}-thermometer'.format(device.lower())
+            callback_output_list.append(Output(th_id, 'value'))
+            thermometer_obj_list.append(daq.Thermometer(
+                id=th_id,
                 value=20,
                 min=0,
                 max=35,
                 style={
-                    'margin-bottom': '5%'
+                    'margin-bottom': '5%',
+                    'width': '25%',
+                    'display': 'inline-block',
+                    'textAlign': 'center'
                 },
                 showCurrentValue=True,
                 units="C",
                 label='Current temperature, {}'
-                      .format(self._device_config[self.show_current_temp_for_device]['location'].capitalize()),
+                    .format(self._device_config[device]['location'].capitalize()),
                 labelPosition='top'
-            )
-        ]
+            ))
+        div_list.append(html.Div(thermometer_obj_list, style={'textAlign': 'center'}))
         self._app.layout = html.Div(
             html.Div(div_list)
         )
 
-        @self._app.callback([Output('live-update-graph', 'figure'),
-                             Output('my-thermometer', 'value')],
+        @self._app.callback(callback_output_list,
                             [Input('interval-component', 'n_intervals')])
         def update_visualise(n):
             return self.visualise(n)
 
-        # self.visualise(self.plot_interval, self._device_config, self.database_handler)
         if host_ip is None:
             hostname = socket.gethostname()
             host_ip = socket.gethostbyname(hostname)
@@ -70,15 +78,16 @@ class HTDataVisualiser:
 
     def visualise(self, n):
         data = self.database_handler.get_data()
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
-        fig.update_layout(
-            title='Temperature and humidity over time',
-            xaxis_title='Date and time',
-        )
-
-        fig.update_yaxes(title_text='Temperature (Celsius)', secondary_y=False)
-        fig.update_yaxes(title_text='Humidity [dashed] (%)', secondary_y=True)
-        current_temp = None
+        if not n:
+            self._fig.update_layout(
+                title='Temperature and humidity over time',
+                xaxis_title='Date and time',
+            )
+            self._fig.update_yaxes(title_text='Temperature (Celsius)', secondary_y=False)
+            self._fig.update_yaxes(title_text='Humidity [dashed] (%)', secondary_y=True)
+        else:
+            self._fig.data = list()
+        current_temps = list()
         for device, device_setting in self._device_config.items():
             device_data = data[data.device == device]
             device_data = device_data.set_index(pd.DatetimeIndex(device_data['date']))
@@ -91,7 +100,7 @@ class HTDataVisualiser:
                 x=device_mean_temp_per_min.index,
                 y=device_mean_temp_per_min.values,
                 mode='lines',
-                name=device_setting['location'],
+                name=device_setting['location'].capitalize(),
                 line={
                     'color': device_setting['identifier'],
                 }
@@ -107,22 +116,24 @@ class HTDataVisualiser:
                 },
                 showlegend=False
             )
-            fig.add_trace(dev_temp_plot, secondary_y=False)
-            fig.add_trace(dev_humid_plot, secondary_y=True)
-            if device == self.show_current_temp_for_device:
-                current_temp = device_data.iloc[-1].temperature
+            self._fig.add_trace(dev_temp_plot, secondary_y=False)
+            self._fig.add_trace(dev_humid_plot, secondary_y=True)
+            current_temps.append(device_data.iloc[-1].temperature)
         default_xaxis_min = datetime.now() - timedelta(hours=self.default_hours_view)
         if not n and (data.date.min() < default_xaxis_min):
-            fig.update_layout(xaxis={'range': [default_xaxis_min, datetime.now()]})
-        return fig, current_temp
+            self._fig.update_layout(xaxis={'range': [default_xaxis_min, datetime.now()]})
+        return (self._fig, *current_temps)
 
 
 if __name__ == '__main__':
     from templogger.utils.device_config_parser import device_config_parser
     from templogger.logger import HTDataBaseHandler
+
     config = device_config_parser()
     db_handler = HTDataBaseHandler()
-    # poller = HTDevicePoller(config['General']['device_sample_interval_s'], config['devices'], db_handler)
 
-    data_visualiser = HTDataVisualiser(config['General']['plot_refresh_interval_s'], config['devices'], db_handler)
-    data_visualiser.start()
+    data_visualiser = HTDataVisualiser(config['General']['plot_refresh_interval_s'],
+                                       config['devices'],
+                                       db_handler,
+                                       config['General']['default_hours_view'])
+    data_visualiser.start(debug=True)
