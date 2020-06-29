@@ -6,3 +6,4 @@ matplotlib
 plotly
 dash
 dash_daq
+git+https://github.com/ratcashdev/mitemp.git
