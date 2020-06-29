@@ -47,7 +47,8 @@ class HTDataVisualiser:
                 },
                 showCurrentValue=True,
                 units="C",
-                label='Current temperature, {}'.format(self._device_config[self.show_current_temp_for_device]['location'].capitalize()),
+                label='Current temperature, {}'
+                      .format(self._device_config[self.show_current_temp_for_device]['location'].capitalize()),
                 labelPosition='top'
             )
         ]
@@ -117,7 +118,7 @@ class HTDataVisualiser:
 
 
 if __name__ == '__main__':
-    from templogger.templogger_main import device_config_parser
+    from templogger.utils.device_config_parser import device_config_parser
     from templogger.logger import HTDataBaseHandler
     config = device_config_parser()
     db_handler = HTDataBaseHandler()

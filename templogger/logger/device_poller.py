@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import logging
 from time import sleep
 from threading import Thread, Lock, Event
 from datetime import datetime
@@ -7,6 +8,8 @@ from datetime import datetime
 import btlewrap
 from btlewrap.bluepy import BluepyBackend
 from mitemp_bt.mitemp_bt_poller import MiTempBtPoller, MI_TEMPERATURE, MI_HUMIDITY
+
+_logger = logging.getLogger(__name__)
 
 
 class HTDevicePoller:
@@ -29,6 +32,7 @@ class HTDevicePoller:
             sleep(self.poll_interval/no_of_devices)
 
     def stop_pollers(self):
+        _logger.debug('Stopping poller threads')
         self._cancel_event.set()
 
     @staticmethod
@@ -39,16 +43,13 @@ class HTDevicePoller:
                 try:
                     mitemp_poller.fill_cache()
                 except btlewrap.base.BluetoothBackendException:
-                    print('Got error getting reading from', device)
+                    _logger.warning('Got error getting reading from', device)
                     continue
                 sample_time = datetime.now()
                 battery = mitemp_poller.battery_level()
                 
             temp = mitemp_poller.parameter_value(MI_TEMPERATURE)
             humid = mitemp_poller.parameter_value(MI_HUMIDITY)
-            print(sample_time,
-                  device,
-                  temp,
-                  humid,
-                  battery)
             db_handler.write_row(device, sample_time, temp, humid, battery)
+            _logger.debug('Got data reading {} for device {}: {} C, {} % humidity, {} % battery level'
+                          .format(sample_time, device, temp, humid, battery))

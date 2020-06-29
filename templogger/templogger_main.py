@@ -1,61 +1,54 @@
 #!/usr/bin/env python3
 
-import os
-import configparser
+import logging
 from time import sleep
 
 from templogger.logger import HTDevicePoller, HTDataBaseHandler
+from templogger.utils.device_config_parser import device_config_parser
 from templogger.visualiser import HTDataVisualiser
 
-
-def device_config_parser(path=None):
-    if path is None:
-        path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'devices.config')
-    config_obj = configparser.ConfigParser()
-    assert os.path.exists(path)
-    config_obj.read(path)
-
-    config = dict()
-    config['General'] = config_obj._sections['General']
-    config['General']['devices'] = config['General']['devices'].split(',')
-    config['General']['plot_refresh_interval_s'] = int(config['General']['plot_refresh_interval_s'])
-    config['General']['device_sample_interval_s'] = int(config['General']['device_sample_interval_s'])
-    config['General']['default_hours_view'] = int(config['General']['default_hours_view'])
-    config['General']['show_current_temp_for_device'] = config['General']['show_current_temp_for_device']
-
-    config['devices'] = dict()
-    for dev in config['General']['devices']:
-        config['devices'][dev] = config_obj._sections[dev]
-        config['devices'][dev]['temp_offset'] = float(config['devices'][dev]['temp_offset'])
-        config['devices'][dev]['humid_offset'] = float(config['devices'][dev]['humid_offset'])
-    return config
+_logger = logging.getLogger('templogger')
+_logger.setLevel(level=logging.INFO)
+_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+_sh = logging.StreamHandler()
+_sh.setLevel(level=logging.INFO)
+_sh.setFormatter(_formatter)
+_logger.addHandler(_sh)
 
 
-def main():
-    print('Running script...')
+def main(host_ip='192.168.100.180', port=8080):
+    _logger.info('Running script...')
     config = device_config_parser()
-    # print('Got config:', config)
     # Data base handler
     db_handler = HTDataBaseHandler()
     # Data poller
-    poller = HTDevicePoller(config['General']['device_sample_interval_s'], config['devices'], db_handler)
+    poller = HTDevicePoller(config['General']['device_sample_interval_s'],
+                            config['devices'],
+                            db_handler)
     # Data visualiser
-    visualiser = HTDataVisualiser(config['General']['plot_refresh_interval_s'], config['devices'], db_handler,
-                                  config['General']['default_hours_view'], config['General']['show_current_temp_for_device'])
+    visualiser = HTDataVisualiser(config['General']['plot_refresh_interval_s'],
+                                  config['devices'],
+                                  db_handler,
+                                  config['General']['default_hours_view'],
+                                  config['General']['show_current_temp_for_device'])
     try:
         poller.start_pollers()
-        visualiser.start(host_ip='192.168.100.180', port=8080, debug=True)
+        visualiser.start(host_ip=host_ip, port=port, debug=True)
         while True:
             sleep(2)
     except KeyboardInterrupt:
-        print('Got keyboard interrupt!')
+        _logger.info('Got keyboard interrupt!')
     finally:
-        print('Stopping script..')
+        _logger.info('Stopping script..')
         poller.stop_pollers()
         sleep(config['General']['device_sample_interval_s'] + 5)
         db_handler.close()
-    print('Script finished')
+    _logger.info('Script finished')
 
 
 if __name__ == '__main__':
+    _fh = logging.FileHandler('SPOT.log')
+    _fh.setLevel(level=logging.DEBUG)
+    _fh.setFormatter(_formatter)
+    _logger.addHandler(_fh)
     main()

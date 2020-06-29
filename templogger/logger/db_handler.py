@@ -1,11 +1,14 @@
+#!/usr/bin/env python3
 import os
 import sqlite3
+import logging
 from threading import Lock
 from datetime import datetime
 
 import pandas as pd
 
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
+_logger = logging.getLogger(__name__)
 
 
 class HTDataBaseHandler:
@@ -70,6 +73,7 @@ class HTDataBaseHandler:
         return df
 
     def clean_database(self):
+        _logger.warning('Cleaning all data from database.')
         with self._db_access_lock:
             # Get a cursor object
             cursor = self.db_connection.cursor()
