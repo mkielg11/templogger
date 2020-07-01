@@ -38,8 +38,8 @@ def main(host_ip='192.168.100.180', port=8080, write_log_to_file=True):
     try:
         poller.start_pollers()
         visualiser.start(host_ip=host_ip, port=port)
-        while True:
-            sleep(2)
+        # while True:
+        #     sleep(2)
     except KeyboardInterrupt:
         _logger.info('Got keyboard interrupt!')
     finally:

@@ -85,8 +85,8 @@ class HTDataVisualiser:
             )
             self._fig.update_yaxes(title_text='Temperature (Celsius)', secondary_y=False)
             self._fig.update_yaxes(title_text='Humidity [dashed] (%)', secondary_y=True)
-        else:
-            self._fig.data = list()
+        
+        self._fig.data = list()  # Make sure fig is empty
         current_temps = list()
         for device, device_setting in self._device_config.items():
             device_data = data[data.device == device]
