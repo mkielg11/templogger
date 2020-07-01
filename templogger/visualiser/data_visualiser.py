@@ -118,7 +118,7 @@ class HTDataVisualiser:
             )
             self._fig.add_trace(dev_temp_plot, secondary_y=False)
             self._fig.add_trace(dev_humid_plot, secondary_y=True)
-            current_temps.append(device_data.iloc[-1].temperature)
+            current_temps.append(device_data.iloc[-1].temperature-device_setting['temp_offset'])
         default_xaxis_min = datetime.now() - timedelta(hours=self.default_hours_view)
         if not n and (data.date.min() < default_xaxis_min):
             self._fig.update_layout(xaxis={'range': [default_xaxis_min, datetime.now()]})
