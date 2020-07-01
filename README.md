@@ -5,6 +5,8 @@ Python module for logging temperature and humidity from Xiaomi Humidity and Temp
 while continuously plotting the data using a Dash server. 
 Works perfectly on a Raspberry Pi.
 
+![TempLogger Dash example view](example.png)
+
 ## Components
 The module consist of two submodules:
 1. `logger` module, containing:
